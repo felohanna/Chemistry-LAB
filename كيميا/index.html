@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chem Lab Game - Gas Detection</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{
+  background:linear-gradient(135deg,#0f172a,#1e3a8a,#0ea5e9); /* dark blue gradient */
+  color:white;
+  font-family:Arial,sans-serif;
+  position:relative;
+  overflow-x:hidden;
+}
+.btn{
+  background:#2563eb;
+  color:white;
+  padding:12px 18px;
+  border-radius:16px;
+  transition:.3s;
+  box-shadow:0 6px 15px rgba(0,0,0,.3);
+  margin-bottom:6px;
+}
+.btn:hover{
+  background:#1d4ed8;
+  transform:scale(1.05);
+}
+.ar{
+  display:block;
+  font-size:13px;
+  opacity:.9;
+}
+.bubble{
+  position:absolute;
+  animation:rise 2s infinite;
+  opacity:0;
+}
+@keyframes rise{
+  0%{opacity:0;transform:translateY(10px);}
+  30%{opacity:1;}
+  100%{opacity:0;transform:translateY(-60px);}
+}
+.icon-container{
+  display:flex;
+  justify-content:center;
+  margin:12px 0;
+  gap:20px;
+  font-size:50px;
+  opacity:0;
+  transition:opacity 0.5s;
+  cursor:pointer;
+}
+.icon-container.active{
+  opacity:1;
+}
+.logo-container{
+  position:absolute;
+  top:10px;
+  left:10px;
+  text-align:center;
+  z-index:1000;
+}
+.logo-container img{
+  height:60px;
+}
+.logo-container .logo-name{
+  display:block;
+  font-size:14px;
+  color:white;
+  font-weight:bold;
+  text-align:center;
+  margin-top:4px;
+}
+.logo-container span{
+  display:block;
+  font-size:12px;
+  color:white; /* changed to white */
+  font-weight:bold;
+  text-align:center;
+  margin-top:2px;
+}
+</style>
+</head>
+<body class="p-6">
+
+<!-- Logo -->
+<div class="logo-container">
+  <img src="logo-bnu.png" alt="Benha National University Logo">
+  <div class="logo-name">Benha National University</div>
+  <span>by FeloHanna</span>
+</div>
+
+<div class="max-w-2xl mx-auto bg-white text-gray-800 p-6 rounded-3xl shadow-xl">
+  <h1 class="text-2xl font-bold text-center mb-4">🧪 Gas Detection</h1>
+  <p class="text-center text-sm mb-6">
+    Select a gas to test reactions.<br>
+    <span class="ar">اختر الغاز لتجربة التفاعلات.</span>
+  </p>
+
+  <!-- Gas Selection -->
+  <div class="grid grid-cols-1 gap-3 mb-6">
+    <button class="btn" onclick="selectGas('HCO3','🧪')">HCO₃⁻<span class="ar">هيدروجين كربونات</span></button>
+    <button class="btn" onclick="selectGas('HS2O3','🧫')">HS₂O₃<span class="ar">ثيوسلفات الهيدروجين</span></button>
+    <button class="btn" onclick="selectGas('HNO2','🧴')">HNO₂<span class="ar">حمض النتروز</span></button>
+  </div>
+
+  <!-- Gas Icon -->
+  <div id="gas-icon" class="icon-container">🧪</div>
+
+  <!-- Reaction Buttons -->
+  <div id="reactions" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+
+  <div id="result" class="mt-6 p-4 bg-gray-100 rounded-2xl text-sm relative"></div>
+</div>
+
+<script>
+const reactionsData = {
+  HCO3:{
+    HCl:"💨 Effervescence occurs with release of colorless gas.<br><span class='ar'>يحدث فوران مع تصاعد غاز عديم اللون.</span>",
+    BaCl:"⚪ White precipitate appears, may dissolve.<br><span class='ar'>يتكون راسب أبيض وقد يذوب مع الوقت.</span>",
+    HgCl:"🟤 Reddish brown precipitate with slight turbidity.<br><span class='ar'>يتكون راسب بني محمر مع عكارة خفيفة.</span>",
+    AgNO3:"⚪ Pale white unstable precipitate forms.<br><span class='ar'>يتكون راسب أبيض باهت غير ثابت.</span>"
+  },
+  HS2O3:{
+    HCl:"⚪ Yellowish white precipitate + effervescence, similar to HgCl₂ reaction.<br><span class='ar'>يتكون راسب أبيض مصفر مع فوران كما في تفاعل HgCl₂.</span>",
+    BaCl:"💨 Colorless solution with effervescence.<br><span class='ar'>محلول عديم اللون مع فوران.</span>",
+    HgCl:"⚪ Yellowish white precipitate + effervescence.<br><span class='ar'>رصاص أبيض مصفر مع فوران.</span>",
+    AgNO3:"⚫ Black precipitate + effervescence.<br><span class='ar'>رصاص أسود مع فوران.</span>"
+  },
+  HNO2:{
+    HCl:"No visible change.<br><span class='ar'>لا يحدث تغير واضح.</span>",
+    BaCl:"Gray precipitate forms.<br><span class='ar'>يتكون راسب رمادي.</span>",
+    HgCl:"Light brown precipitate.<br><span class='ar'>يتكون راسب بني فاتح.</span>",
+    AgNO3:"Pale yellow precipitate.<br><span class='ar'>يتكون راسب أصفر باهت.</span>"
+  }
+};
+
+let selectedGas = null;
+
+function selectGas(gas, icon){
+  selectedGas = gas;
+  const iconDiv = document.getElementById('gas-icon');
+  iconDiv.textContent = icon;
+  iconDiv.classList.add('active');
+
+  const container = document.getElementById('reactions');
+  container.innerHTML = '';
+  ['HCl','BaCl','HgCl','AgNO3'].forEach(r => {
+    const btn = document.createElement('button');
+    btn.className='btn';
+    btn.innerHTML = `${gas} + ${r}<span class='ar'>مع ${r}</span>`;
+    btn.onclick = ()=>showResult(r);
+    container.appendChild(btn);
+  });
+  document.getElementById('result').innerHTML='';
+}
+
+function showResult(reagent){
+  if(!selectedGas) return;
+  const resultDiv = document.getElementById('result');
+  resultDiv.innerHTML = reactionsData[selectedGas][reagent];
+
+  // Generate multiple bubbles for effervescence effect
+  for(let i=0;i<10;i++){
+    const bubble = document.createElement('div');
+    bubble.className='bubble';
+    bubble.textContent='🫧';
+    bubble.style.left=Math.random()*90+'%';
+    bubble.style.animationDuration= (1.5 + Math.random()*1)+'s';
+    bubble.style.fontSize = (12 + Math.random()*18)+'px';
+    resultDiv.appendChild(bubble);
+    setTimeout(()=>bubble.remove(),2000);
+  }
+}
+</script>
+
+</body>
+</html>
